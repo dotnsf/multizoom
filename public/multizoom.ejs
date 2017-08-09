@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>multizoom</title>
+<script type="text/javascript" src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<link rel="stylesheet" type="text/css" href="./multizoom.css" />
+<script type="text/javascript" src="./multizoom.js"></script>
+<script type="text/javascript">
+
+var filename = 'moo01.jpg';
+jQuery( document ).ready( function( $ ){
+  $('#image1').attr( 'src', filename );
+
+  function checkImage( left, top, width, height ){
+    if( left > 0 && top > 0 && width > 0 && height > 0 ){
+      //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
+      $.ajax({
+        type: 'GET',
+        url: './checkimage?filename=' + filename + '&left=' + left + '&top=' + top + '&width=' + width + '&height=' + height,
+        success: function( data ){
+          //console.log( data );
+          var json = JSON.parse( data );
+          var classes = json.images[0].classifiers[0].classes;
+          var b = false;
+          for( i = 0; i < classes.length && !b; i ++ ){
+            var cls = classes[i];
+            var cls_name = cls.class;
+            var cls_score = cls.score;
+            console.log( cls_name + ":" + cls_score );
+            //. beef, cattle, ox, cow
+            var cow = [ 'cow', 'beef', 'cattle', 'ox' ];
+            for( j = 0; j < cow.length && !b; j ++ ){
+              b = ( cls_name.toLowerCase().indexOf( cow[j] ) > -1 );
+            }
+          }
+          if( b ){
+            //. 牛
+            console.log( '牛' );
+          }else{
+          }
+        },
+        error: function( XMLHttpRequest, textStatus, errorThrown ){
+          console.log( textStatus + ": " + errorThrown );
+        }
+      });
+    }
+  }
+ 
+  function check(){
+    var left = -1, top = -1, width = -1, height = -1;
+    var attr = $('.cursorshade').attr( 'style' );
+    var attrs = attr.split( ';' );
+    for( i = 0; i < attrs.length; i ++ ){
+      var tmp = attrs[i].split( ':' );
+      if( tmp.length == 2 ){
+        var key = tmp[0].trim();
+        var value = tmp[1].trim();
+        var n = value.indexOf( 'px' );
+        if( n > -1 ){
+          value = parseInt( value.substring( 0, n ) );
+        }
+
+        //. left と top は 8 引いて調整
+        if( key == 'left' ){
+          left = value - 8;
+        }else if( key == 'top' ){
+          top = value - 8;
+        }else if( key == 'width' ){
+          width = value;
+        }else if( key == 'height' ){
+          height = value;
+        }
+      }
+    }
+
+    //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
+    checkImage( left, top, width, height );
+  }
+
+  $('#image1').addimagezoom({
+    zoomrange: [ 3, 10 ],
+    magnifiersize: [ 300, 300 ],
+    magnifierpos: 'right',
+    cursorshade: true,
+    largeimage: filename
+  });
+
+  setInterval( check, 5000 );
+});
+</script>
+</head>
+<body>
+<img id="image1" border="0" style="width:400px;height:300px"/>
+</body>
+</html>
+
