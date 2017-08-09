@@ -8,7 +8,23 @@
 
 var filename = 'moo01.jpg';
 jQuery( document ).ready( function( $ ){
+  $('#select1').change( function(){
+    var val = $('#select1').val();
+console.log( 'val=' + val );
+    $('#image1').attr( 'src', val );
+    filename = val;
+
+    $('#image1').addimagezoom({
+      zoomrange: [ 3, 10 ],
+      magnifiersize: [ 300, 300 ],
+      magnifierpos: 'right',
+      cursorshade: true,
+      largeimage: filename
+    });
+  });
+
   $('#image1').attr( 'src', filename );
+  $('#select1').val( filename );
 
   function checkImage( left, top, width, height ){
     //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
@@ -90,6 +106,12 @@ jQuery( document ).ready( function( $ ){
 </head>
 <body>
 <img id="image1" border="0" style="width:400px;height:300px"/>
+<br/>
+<select id="select1">
+<option value="moo01.jpg">1</option>
+<option value="moo02.jpg">2</option>
+<option value="moo03.jpg">3</option>
+</select>
 </body>
 </html>
 
