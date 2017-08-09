@@ -11,13 +11,12 @@ jQuery( document ).ready( function( $ ){
   $('#image1').attr( 'src', filename );
 
   function checkImage( left, top, width, height ){
+    //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
     if( left > 0 && top > 0 && width > 0 && height > 0 ){
-      //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
       $.ajax({
         type: 'GET',
         url: './checkimage?filename=' + filename + '&left=' + left + '&top=' + top + '&width=' + width + '&height=' + height,
         success: function( data ){
-          //console.log( data );
           var json = JSON.parse( data );
           var classes = json.images[0].classifiers[0].classes;
           var b = false;
@@ -25,7 +24,7 @@ jQuery( document ).ready( function( $ ){
             var cls = classes[i];
             var cls_name = cls.class;
             var cls_score = cls.score;
-            console.log( cls_name + ":" + cls_score );
+            //console.log( cls_name + ":" + cls_score );
             //. beef, cattle, ox, cow
             var cow = [ 'cow', 'beef', 'cattle', 'ox' ];
             for( j = 0; j < cow.length && !b; j ++ ){
@@ -34,8 +33,9 @@ jQuery( document ).ready( function( $ ){
           }
           if( b ){
             //. 牛
-            console.log( '牛' );
+            $('img').css( {'border':'solid 3px #ff0000'} );
           }else{
+            $('img').css( {'border':'solid 1px #000000'} );
           }
         },
         error: function( XMLHttpRequest, textStatus, errorThrown ){

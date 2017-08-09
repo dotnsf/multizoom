@@ -37,7 +37,7 @@ app.get( '/checkimage', function( req, res ){
   var top = req.query.top;
   var width = req.query.width;
   var height = req.query.height;
-  console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
+  //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
 
   var srcpath = 'public/' + filename;
   var dstpath = 'public/' + filename + '.png';
@@ -51,7 +51,8 @@ app.get( '/checkimage', function( req, res ){
     cropheight: height
   };
   easyimg.crop( settingObj ).then( function( image ){
-    var stream = fs.createReadStream( image.path );
+/*
+    var stream = fs.createReadStream( image.path, {} );
     stream.on( 'data', function( data ){
       var params = { images_file: data };
       var req1 = vr3.classify( params, function( err1, res1 ){
@@ -64,12 +65,15 @@ app.get( '/checkimage', function( req, res ){
           res.end();
         } 
 
-        //fs.unlink( dstpath, function( err0 ){} );
+        fs.unlink( dstpath, function( err0 ){} );
       });
     });
-/*
+
+    stream.on( 'end', function(){
+    });
+*/
     var params = {
-      images_file: fs.createReadStream( image.path )
+      images_file: fs.createReadStream( dstpath )
     };
     var req1 = vr3.classify( params, function( err1, res1 ){
       if( err1 ){
@@ -81,9 +85,8 @@ app.get( '/checkimage', function( req, res ){
         res.end();
       } 
 
-      //fs.unlink( dstpath, function( err0 ){} );
+      fs.unlink( dstpath, function( err0 ){} );
     });
-*/
   });
 });
 
