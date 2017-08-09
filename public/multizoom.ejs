@@ -7,10 +7,13 @@
 <script type="text/javascript">
 
 var filename = 'moo01.jpg';
+
+var mode = 1; //. -1: 移動, 0: ストップ, 1: 送信済み
+var oleft, otop;
+
 jQuery( document ).ready( function( $ ){
   $('#select1').change( function(){
     var val = $('#select1').val();
-console.log( 'val=' + val );
     $('#image1').attr( 'src', val );
     filename = val;
 
@@ -29,67 +32,90 @@ console.log( 'val=' + val );
   function checkImage( left, top, width, height ){
     //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
     if( left > 0 && top > 0 && width > 0 && height > 0 ){
-      $.ajax({
-        type: 'GET',
-        url: './checkimage?filename=' + filename + '&left=' + left + '&top=' + top + '&width=' + width + '&height=' + height,
-        success: function( data ){
-          var json = JSON.parse( data );
-          var classes = json.images[0].classifiers[0].classes;
-          var b = false;
-          for( i = 0; i < classes.length && !b; i ++ ){
-            var cls = classes[i];
-            var cls_name = cls.class;
-            var cls_score = cls.score;
-            //console.log( cls_name + ":" + cls_score );
-            //. beef, cattle, ox, cow
-            var cow = [ 'cow', 'beef', 'cattle', 'ox' ];
-            for( j = 0; j < cow.length && !b; j ++ ){
-              b = ( cls_name.toLowerCase().indexOf( cow[j] ) > -1 );
-            }
-          }
-          if( b ){
-            //. 牛
-            $('img').css( {'border':'solid 3px #ff0000'} );
-          }else{
-            $('img').css( {'border':'solid 1px #000000'} );
-          }
-        },
-        error: function( XMLHttpRequest, textStatus, errorThrown ){
-          console.log( textStatus + ": " + errorThrown );
-        }
-      });
+      mode = checkmode( left, top, width, height, oleft, otop, mode );
     }
+    oleft = left; otop = top;
   }
  
   function check(){
     var left = -1, top = -1, width = -1, height = -1;
     var attr = $('.cursorshade').attr( 'style' );
-    var attrs = attr.split( ';' );
-    for( i = 0; i < attrs.length; i ++ ){
-      var tmp = attrs[i].split( ':' );
-      if( tmp.length == 2 ){
-        var key = tmp[0].trim();
-        var value = tmp[1].trim();
-        var n = value.indexOf( 'px' );
-        if( n > -1 ){
-          value = parseInt( value.substring( 0, n ) );
-        }
+    if( attr ){
+      var attrs = attr.split( ';' );
+      for( i = 0; i < attrs.length; i ++ ){
+        var tmp = attrs[i].split( ':' );
+        if( tmp.length == 2 ){
+          var key = tmp[0].trim();
+          var value = tmp[1].trim();
+          var n = value.indexOf( 'px' );
+          if( n > -1 ){
+            value = parseInt( value.substring( 0, n ) );
+          }
 
-        //. left と top は 8 引いて調整
-        if( key == 'left' ){
-          left = value - 8;
-        }else if( key == 'top' ){
-          top = value - 8;
-        }else if( key == 'width' ){
-          width = value;
-        }else if( key == 'height' ){
-          height = value;
+          //. left と top は 8 引いて調整
+          if( key == 'left' ){
+            left = value - 8;
+          }else if( key == 'top' ){
+            top = value - 8;
+          }else if( key == 'width' ){
+            width = value;
+          }else if( key == 'height' ){
+            height = value;
+          }
         }
       }
+
+      //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
+      checkImage( left, top, width, height );
+    }
+  }
+
+  function checkmode( l1, t1, w1, h1, l0, t0, m ){
+    var md = m;
+    var d = ( l1 - l0 ) * ( l1 - l0 ) + ( t1 - t0 ) * ( t1 - t0 );
+    if( d < 100 ){
+      if( m == -1 ){
+        md = 0;
+      }else if( m == 0 ){
+        $.ajax({
+          type: 'GET',
+          url: './checkimage?filename=' + filename + '&left=' + l1 + '&top=' + t1 + '&width=' + w1 + '&height=' + h1,
+          success: function( data ){
+            var json = JSON.parse( data );
+            var classes = json.images[0].classifiers[0].classes;
+            var b = false;
+            for( i = 0; i < classes.length && !b; i ++ ){
+              var cls = classes[i];
+              var cls_name = cls.class;
+              var cls_score = cls.score;
+              console.log( cls_name + ":" + cls_score );
+              //. beef, cattle, ox, cow
+              var cow = [ 'cow', 'beef', 'cattle', 'ox' ];
+              for( j = 0; j < cow.length && !b; j ++ ){
+                b = ( cls_name.toLowerCase().indexOf( cow[j] ) > -1 );
+                if( b ){ console.log( cls_name + ":" + cls_score ); }
+              }
+            }
+            if( b ){
+              //. 牛
+              $('img').css( {'border':'solid 3px #ff0000'} );
+            }else{
+              $('img').css( {'border':'solid 1px #000000'} );
+            }
+          },
+          error: function( XMLHttpRequest, textStatus, errorThrown ){
+            console.log( textStatus + ": " + errorThrown );
+          }
+        });
+
+        md = 1;
+      }else{
+      }
+    }else{
+      md = -1;
     }
 
-    //console.log( '(' + left + ',' + top + ')-[' + width + ',' + height + ']' );
-    checkImage( left, top, width, height );
+    return md;
   }
 
   $('#image1').addimagezoom({
@@ -100,7 +126,7 @@ console.log( 'val=' + val );
     largeimage: filename
   });
 
-  setInterval( check, 5000 );
+  setInterval( check, 1000 );
 });
 </script>
 </head>
